@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>โอเอกซ์ขั้นเทพ ♟️</title>
+  <style>
+    body {
+      font-family: 'Anuphan', sans-serif;
+      background: #f0f0f0;
+      text-align: center;
+      padding: 20px;
+    }
+    h1 {
+      color: #2c3e50;
+    }
+    #board {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      grid-template-rows: repeat(3, 100px);
+      gap: 5px;
+      justify-content: center;
+      margin: 20px auto;
+    }
+    .cell {
+      width: 100px;
+      height: 100px;
+      background: white;
+      font-size: 3rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      border: 2px solid #34495e;
+      border-radius: 10px;
+    }
+    .cell:hover {
+      background: #ecf0f1;
+    }
+    #message {
+      margin-top: 20px;
+      font-size: 1.2rem;
+      color: #e74c3c;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background: #27ae60;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>♟️ โอเอกซ์ขั้นเทพ</h1>
+  <div id="board"></div>
+  <div id="message"></div>
+  <button onclick="resetGame()">เริ่มใหม่ 🔁</button>
+
+  <script>
+    const boardEl = document.getElementById('board');
+    const messageEl = document.getElementById('message');
+    let board = Array(9).fill(null);
+    let isGameOver = false;
+
+    function renderBoard() {
+      boardEl.innerHTML = '';
+      board.forEach((val, i) => {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.textContent = val;
+        cell.onclick = () => handleClick(i);
+        boardEl.appendChild(cell);
+      });
+    }
+
+    function handleClick(index) {
+      if (isGameOver || board[index]) return;
+      board[index] = 'X';
+      renderBoard();
+      if (checkWin('X')) return endGame('คุณชนะ! 🎉');
+      if (board.every(cell => cell)) return endGame('เสมอ! 😐');
+      setTimeout(botMove, 500);
+    }
+
+    function botMove() {
+      const bestMove = getBestMove();
+      board[bestMove] = 'O';
+      renderBoard();
+      if (checkWin('O')) return endGame('บอทชนะ! 🤖');
+      if (board.every(cell => cell)) return endGame('เสมอ! 😐');
+    }
+
+    function getBestMove() {
+      let bestScore = -Infinity;
+      let move;
+      for (let i = 0; i < board.length; i++) {
+        if (!board[i]) {
+          board[i] = 'O';
+          let score = minimax(board, 0, false);
+          board[i] = null;
+          if (score > bestScore) {
+            bestScore = score;
+            move = i;
+          }
+        }
+      }
+      return move;
+    }
+
+    function minimax(boardState, depth, isMaximizing) {
+      if (checkWin('O', boardState)) return 10 - depth;
+      if (checkWin('X', boardState)) return depth - 10;
+      if (boardState.every(cell => cell)) return 0;
+
+      if (isMaximizing) {
+        let maxEval = -Infinity;
+        for (let i = 0; i < boardState.length; i++) {
+          if (!boardState[i]) {
+            boardState[i] = 'O';
+            let eval = minimax(boardState, depth + 1, false);
+            boardState[i] = null;
+            maxEval = Math.max(maxEval, eval);
+          }
+        }
+        return maxEval;
+      } else {
+        let minEval = Infinity;
+        for (let i = 0; i < boardState.length; i++) {
+          if (!boardState[i]) {
+            boardState[i] = 'X';
+            let eval = minimax(boardState, depth + 1, true);
+            boardState[i] = null;
+            minEval = Math.min(minEval, eval);
+          }
+        }
+        return minEval;
+      }
+    }
+
+    function checkWin(player, b = board) {
+      const wins = [
+        [0,1,2],[3,4,5],[6,7,8],
+        [0,3,6],[1,4,7],[2,5,8],
+        [0,4,8],[2,4,6]
+      ];
+      return wins.some(combo => combo.every(i => b[i] === player));
+    }
+
+    function endGame(msg) {
+      isGameOver = true;
+      messageEl.textContent = msg;
+    }
+
+    function resetGame() {
+      board = Array(9).fill(null);
+      isGameOver = false;
+      messageEl.textContent = '';
+      renderBoard();
+    }
+
+    renderBoard();
+  </script>
+</body>
+</html>
